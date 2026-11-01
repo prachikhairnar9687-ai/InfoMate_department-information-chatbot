@@ -1,6 +1,82 @@
-{% extends "base.html" %}{% block title %}InfoMate | Department Academic Assistant{% endblock %}
-{% block content %}<div class="container">
-<section class="hero"><div class="hero-copy"><p class="eyebrow"><span class="dot"></span> YOUR DEPARTMENT, ONE PLACE</p><h1>Academic answers,<br><em>made simple.</em></h1><p class="lead">InfoMate helps students find department information without searching through multiple files and notices. Ask a question in plain language and get an answer based on available, approved department sources.</p><a class="outline-button" href="/chat">Open InfoMate <span>→</span></a><p class="trust"><span>✓</span> Answers grounded in approved department sources</p></div>
-<aside class="hero-card"><div class="mini-icon">✳</div><p class="eyebrow tiny">YOUR ACADEMIC HELPER</p><h2>Department information,<br>all in one place.</h2><div class="feature-line"><span class="feature-icon pink">▤</span><span><b>Academic information</b><small>Timetables, exams and notices</small></span></div><div class="feature-line"><span class="feature-icon blue">⌕</span><span><b>Simple question and answer</b><small>Ask naturally, get clear responses</small></span></div><p class="ready"><span class="dot"></span> READY TO HELP</p></aside></section>
-<section class="about"><p class="eyebrow">ABOUT INFOMATE</p><h2>What this chatbot provides</h2><p>A simple place for students to get common academic information from department resources.</p><div class="cards"><article class="info-card"><span class="card-icon pink">▤</span><h3>Academic information</h3><p>Find available timetables, examination schedules, academic calendars, notices, syllabus details and course information.</p></article><article class="info-card"><span class="card-icon purple">✦</span><h3>Ask in your own words</h3><p>Type a question naturally instead of manually searching through different documents and announcements.</p></article><article class="info-card"><span class="card-icon green">✓</span><h3>Source-based answers</h3><p>Responses use available approved department information. If details are missing, check the official notice or ask department staff.</p></article></div></section></div>
-<section class="notices"><div class="container notice-layout"><div><p class="eyebrow">LATEST UPDATES</p><h2>Department notices</h2><p>Only published notices appear here.</p></div><div class="notice-box">{% if notices %}{% for n in notices %}<article class="notice-item"><b>{{ n.title }}</b><p>{{ n.body }}</p><small>{{ n.category }}</small></article>{% endfor %}{% else %}<p class="empty">No published notices are available right now.</p>{% endif %}</div></div></section>{% endblock %}
+{% extends "base.html" %}
+
+{% block title %}InfoMate | Department Academic Assistant{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+    <section class="hero">
+        <div class="hero-mark">i</div>
+        <h1>Academic answers, made simple.</h1>
+        <p class="lead">
+            InfoMate helps students find department information without searching
+            through multiple files and notices. Ask a question in plain language and
+            get an answer based on available, approved department sources.
+        </p>
+        <a class="btn btn-primary btn-lg" href="/chat">Open InfoMate</a>
+        <p class="hero-note">Answers are grounded in approved department sources.</p>
+    </section>
+
+    <section class="features">
+
+        <article class="feature">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <path d="M14 2v6h6M8 13h8M8 17h5"/>
+            </svg>
+            <h3>Academic information</h3>
+            <p>Find available timetables, examination schedules, academic calendars,
+               notices, syllabus details and course information.</p>
+        </article>
+
+        <article class="feature">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            <h3>Ask in your own words</h3>
+            <p>Type a question naturally instead of manually searching through
+               different documents and announcements.</p>
+        </article>
+
+        <article class="feature">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <path d="m9 12 2 2 4-4"/>
+            </svg>
+            <h3>Source-based answers</h3>
+            <p>Responses use available approved department information. If details
+               are missing, check the official notice or ask department staff.</p>
+        </article>
+
+    </section>
+
+</div>
+
+<section class="notices">
+    <div class="container narrow">
+        <h2>Department notices</h2>
+        <p class="muted">Only published notices appear here.</p>
+
+        <div class="notice-list">
+            {% if notices %}
+                {% for n in notices %}
+                <article class="notice-item">
+                    <div class="notice-top">
+                        <h3>{{ n.title }}</h3>
+                        <span class="tag">{{ n.category }}</span>
+                    </div>
+                    <p>{{ n.body }}</p>
+                </article>
+                {% endfor %}
+            {% else %}
+                <p class="empty">No published notices are available right now.</p>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+{% endblock %}

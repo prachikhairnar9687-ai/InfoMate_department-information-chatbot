@@ -1,4 +1,143 @@
-{% extends "base.html" %}{% block title %}Chat with InfoMate{% endblock %}
-{% block content %}<div class="container chat-page"><div class="chat-heading"><span class="big-spark">✦</span><div><p class="eyebrow cyan">YOUR COLLEGE HELPER</p><h1>Hi! I'm <em>InfoMate</em> 👋</h1><p>Ask me about your timetable, exams, notices, syllabus, or other department information.</p></div></div>
-<section class="chat-shell"><div class="chat-top"><span class="mini-icon">✦</span><div><b>InfoMate</b><small><span class="dot"></span> Ready to help</small></div><button class="icon-button" id="reset" title="New conversation">↻</button></div><div class="messages" id="messages" aria-live="polite"><div class="message-row bot"><span class="avatar">✦</span><div class="bubble">Hey there! 😊 What would you like to know?<br><br>Choose a suggestion below or type your question.</div></div></div><div class="chat-controls"><div class="suggestions"><button data-q="Show the latest published department notices">📢 Latest notices</button><button data-q="Show the academic calendar">📅 Academic calendar</button><button data-q="Find the SY timetable">📚 SY timetable</button><button data-q="What are the examination dates?">📝 Exam dates</button></div><form id="chat-form"><input id="question" maxlength="1200" autocomplete="off" placeholder="Type your question here..." aria-label="Your question"><button class="send" type="submit" aria-label="Send">➤</button></form><p class="hint">Please verify important dates with official notices.</p></div></section><p class="tip">💡 Tip: Ask a clear question for a more helpful answer.</p></div>{% endblock %}
-{% block scripts %}<script src="{{ url_for('static', filename='chat.js') }}"></script>{% endblock %}
+{% extends "base.html" %}
+
+{% block title %}InfoMate | AI Academic Assistant{% endblock %}
+
+{# The chat page uses the site top bar as its only header #}
+{% block nav %}
+<button class="btn new-chat-button" id="reset" type="button" title="Start a new conversation">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 5v14M5 12h14"/>
+    </svg>
+    <span>New chat</span>
+</button>
+<a class="btn" href="/admin">Admin portal</a>
+{% endblock %}
+
+{% block content %}
+
+<div class="infomate-app">
+
+    <div class="chat-main">
+
+        <!-- Conversation (the only part that can scroll) -->
+        <section class="conversation-area">
+            <div class="messages" id="messages" aria-live="polite" aria-label="Conversation">
+
+                <div class="welcome-screen" id="welcome-screen">
+
+                    <div class="welcome-greeting">
+                        <div class="welcome-symbol">i</div>
+                        <h1>How can I help you today?</h1>
+                    </div>
+
+                    <p class="welcome-description">
+                        Ask about your department's notices, timetables,
+                        examinations, academic calendar and study resources.
+                    </p>
+
+                    <div class="suggestion-grid">
+
+                        <button class="suggestion-card" type="button"
+                                data-q="Show the latest published department notices">
+                            <span class="suggestion-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+                                    <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+                                </svg>
+                            </span>
+                            <span class="suggestion-content">
+                                <strong>Latest notices</strong>
+                                <small>Recent department announcements</small>
+                            </span>
+                        </button>
+
+                        <button class="suggestion-card" type="button"
+                                data-q="Show the academic calendar">
+                            <span class="suggestion-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                                    <path d="M16 2v4M8 2v4M3 10h18"/>
+                                </svg>
+                            </span>
+                            <span class="suggestion-content">
+                                <strong>Academic calendar</strong>
+                                <small>Important academic dates</small>
+                            </span>
+                        </button>
+
+                        <button class="suggestion-card" type="button"
+                                data-q="Find the SY timetable">
+                            <span class="suggestion-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="9"/>
+                                    <path d="M12 7v5l3 2"/>
+                                </svg>
+                            </span>
+                            <span class="suggestion-content">
+                                <strong>Class timetable</strong>
+                                <small>Your weekly class schedule</small>
+                            </span>
+                        </button>
+
+                        <button class="suggestion-card" type="button"
+                                data-q="What are the examination dates?">
+                            <span class="suggestion-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <path d="M14 2v6h6M8 13h8M8 17h5"/>
+                                </svg>
+                            </span>
+                            <span class="suggestion-content">
+                                <strong>Examination details</strong>
+                                <small>Exam dates and information</small>
+                            </span>
+                        </button>
+
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Input -->
+        <div class="composer-section">
+
+            <form id="chat-form" class="composer">
+                <input
+                    type="text"
+                    id="question"
+                    name="question"
+                    maxlength="1200"
+                    autocomplete="off"
+                    placeholder="Ask InfoMate about your department..."
+                    aria-label="Ask InfoMate a question"
+                >
+
+                <button class="send-button" type="submit" aria-label="Send message" title="Send message">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 19V5M5 12l7-7 7 7"/>
+                    </svg>
+                </button>
+            </form>
+
+            <div class="composer-footer">
+                InfoMate can make mistakes. Verify important dates with official notices.
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='chat.js') }}"></script>
+{% endblock %}

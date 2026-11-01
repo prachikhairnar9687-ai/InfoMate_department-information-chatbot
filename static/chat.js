@@ -1,6 +1,13 @@
 const form = document.getElementById("chat-form");
 const input = document.getElementById("question");
 const messages = document.getElementById("messages");
+const resetButton = document.getElementById("reset");
+
+const WELCOME_MESSAGE =
+  "Hey there! 😊 What would you like to know?\n\n" +
+  "Choose a suggestion below or type your question.";
+
+let requestInProgress = false;
 
 function addMessage(text, who) {
   const row = document.createElement("div");
@@ -21,6 +28,13 @@ function addMessage(text, who) {
   return bubble;
 }
 
+function initializeChat() {
+  if (!messages) return;
+
+  messages.innerHTML = "";
+  addMessage(WELCOME_MESSAGE, "bot");
+}
+
 function addDocumentLinks(bubble, documents) {
   if (!Array.isArray(documents) || documents.length === 0) {
     return;
@@ -31,19 +45,18 @@ function addDocumentLinks(bubble, documents) {
 
   const heading = document.createElement("p");
   heading.className = "chat-documents-heading";
-  heading.textContent = "📚 Related department PDFs";
+  heading.textContent = "📚 Related department documents";
   section.appendChild(heading);
 
   documents.forEach((doc) => {
-    if (!doc.id || !doc.name) return;
+    if (!doc || !doc.id || !doc.name) return;
 
     const link = document.createElement("a");
     link.className = "chat-document-link";
-    link.href =
-      `/api/documents/${encodeURIComponent(doc.id)}/open`;
+    link.href = `/api/documents/${encodeURIComponent(doc.id)}/open`;
     link.target = "_blank";
     link.rel = "noopener noreferrer";
-    link.textContent = `📄 View PDF: ${doc.name}`;
+    link.textContent = `📄 Open: ${doc.name}`;
     link.title = `Open ${doc.name}`;
 
     section.appendChild(link);
@@ -56,13 +69,20 @@ function addDocumentLinks(bubble, documents) {
   messages.scrollTop = messages.scrollHeight;
 }
 
-async function ask(q) {
-  if (!q.trim()) return;
+async function ask(question) {
+  const q = String(question || "").trim();
+
+  if (!q || requestInProgress || !messages) {
+    return;
+  }
+
+  requestInProgress = true;
+
+  const submitButton = form?.querySelector('button[type="submit"]');
+  if (submitButton) submitButton.disabled = true;
 
   addMessage(q, "user");
-
   input.value = "";
-  input.focus();
 
   const pending = addMessage(
     "Checking approved department sources…",
@@ -78,7 +98,12 @@ async function ask(q) {
       body: JSON.stringify({ message: q })
     });
 
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch {
+      data = {};
+    }
 
     if (!response.ok) {
       pending.textContent =
@@ -89,28 +114,33 @@ async function ask(q) {
     pending.textContent =
       data.answer || "I couldn't generate an answer. Please try again.";
 
+    // The backend returns documents only when the user requested a file.
     addDocumentLinks(pending, data.documents || []);
-
   } catch (error) {
+    console.error("InfoMate chat error:", error);
     pending.textContent =
-      "I couldn't connect to InfoMate. Please check your internet connection and try again.";
+      "I couldn't connect to InfoMate. Please check your connection and try again.";
+  } finally {
+    requestInProgress = false;
+    if (submitButton) submitButton.disabled = false;
+    input?.focus();
   }
 }
 
 form?.addEventListener("submit", (event) => {
   event.preventDefault();
-  ask(input.value);
+  ask(input?.value);
 });
 
 document.querySelectorAll("[data-q]").forEach((button) => {
-  button.addEventListener("click", () => ask(button.dataset.q));
+  button.addEventListener("click", () => {
+    ask(button.dataset.q || "");
+  });
 });
 
-document.getElementById("reset")?.addEventListener("click", () => {
-  messages.innerHTML = "";
+resetButton?.addEventListener("click", initializeChat);
 
-  addMessage(
-    "Hey there! 😊 What would you like to know?\n\nChoose a suggestion below or type your question.",
-    "bot"
-  );
-});
+// Show the welcome message only when the chat area is initially empty.
+if (messages && messages.children.length === 0) {
+  initializeChat();
+}

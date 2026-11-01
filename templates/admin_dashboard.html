@@ -1,9 +1,180 @@
-{% extends "base.html" %}{% block title %}Admin Dashboard | InfoMate{% endblock %}
-{% block content %}<div class="container dashboard"><div class="dash-head"><div><p class="eyebrow">INFO MATE / ADMINISTRATION</p><h1>Admin dashboard</h1><p>Signed in as {{ admin.email }} · role: {{ admin.role }}</p></div><form method="post" action="/admin/logout"><button class="admin-link" type="submit">Sign out</button></form></div>
-<div class="status-row"><div class="status-card"><small>AI service</small><b><span class="status-dot {{ 'ok' if ai_ready else 'warn' }}"></span>{{ 'API key configured' if ai_ready else 'Not configured' }}</b><small>See /health for configuration status</small></div><div class="status-card"><small>Documents</small><b>{{ docs|length }} files</b><small>Manage files below</small></div><div class="status-card"><small>Notices</small><b>{{ notices|length }} notices</b><small>Publish accurate information</small></div></div>
-{% if db_error %}<div class="flash error">Database error: {{ db_error }}</div>{% endif %}
-<div class="admin-grid"><section class="panel"><h2>Upload a document</h2><p>PDF, DOCX, TXT, or CSV · maximum 20 MB</p><form class="stack-form" method="post" action="/admin/documents" enctype="multipart/form-data"><label>Document file</label><input type="file" name="file" accept=".pdf,.docx,.txt,.csv" required><label>Category</label><select name="category"><option>General</option><option>AcademicTimetable</option><option>ExaminationNotice</option><option>Syllabus</option><option>AcademicCalendar</option><option>SeatNumbers</option></select><button class="primary-button">Upload and index</button></form></section>
-<section class="panel"><h2>Add a department notice</h2><form class="stack-form" method="post" action="/admin/notices"><label>Notice title</label><input name="title" required maxlength="180"><label>Notice details</label><textarea name="body" rows="4" required maxlength="12000"></textarea><label>Category</label><input name="category" value="General"><label class="check-label"><input type="checkbox" name="published" checked> Publish immediately</label><button class="primary-button">Save notice</button></form></section></div>
-<section class="panel table-panel"><div class="section-title"><h2>Department documents</h2><span>{{ docs|length }} total</span></div>{% if docs %}<div class="table-wrap"><table><thead><tr><th>File name</th><th>Category</th><th>Status</th><th>Uploaded</th><th>Actions</th></tr></thead><tbody>{% for d in docs %}<tr><td>{{ d.name }}</td><td>{{ d.category }}</td><td><span class="pill">{{ d.status }}</span></td><td>{{ (d.created_at or '')[:10] }}</td><td class="actions"><a class="small-button" href="/admin/documents/{{ d.id }}/open" target="_blank">View</a><form method="post" action="/admin/documents/{{ d.id }}/delete" onsubmit="return confirm('Delete this document?')"><button class="small-button danger">Delete</button></form></td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="empty">No documents uploaded yet. Upload the first department document above.</p>{% endif %}</section>
-<section class="panel table-panel"><div class="section-title"><h2>Department notices</h2><span>{{ notices|length }} total</span></div>{% if notices %}<div class="table-wrap"><table><thead><tr><th>Title</th><th>Category</th><th>Visibility</th><th>Created</th><th>Actions</th></tr></thead><tbody>{% for n in notices %}<tr><td>{{ n.title }}</td><td>{{ n.category }}</td><td>{{ 'Published' if n.published else 'Draft' }}</td><td>{{ (n.created_at or '')[:10] }}</td><td><form method="post" action="/admin/notices/{{ n.id }}/delete" onsubmit="return confirm('Delete this notice?')"><button class="small-button danger">Delete</button></form></td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="empty">No notices created yet.</p>{% endif %}</section>
-</div>{% endblock %}
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard | InfoMate{% endblock %}
+
+{% block content %}
+
+<div class="container dashboard">
+
+    <div class="dash-head">
+        <div>
+            <h1>Admin dashboard</h1>
+            <p>Signed in as {{ admin.email }} ({{ admin.role }})</p>
+        </div>
+        <form method="post" action="/admin/logout">
+            <button class="btn" type="submit">Sign out</button>
+        </form>
+    </div>
+
+    <div class="status-row">
+        <div class="status-card">
+            <small>AI service</small>
+            <b><span class="status-dot {{ 'ok' if ai_ready else 'warn' }}"></span>{{ 'API key configured' if ai_ready else 'Not configured' }}</b>
+            <small>See /health for configuration status</small>
+        </div>
+        <div class="status-card">
+            <small>Documents</small>
+            <b>{{ docs|length }} files</b>
+            <small>Manage files below</small>
+        </div>
+        <div class="status-card">
+            <small>Notices</small>
+            <b>{{ notices|length }} notices</b>
+            <small>Publish accurate information</small>
+        </div>
+    </div>
+
+    {% if db_error %}
+    <div class="flash error" style="margin-bottom:16px">Database error: {{ db_error }}</div>
+    {% endif %}
+
+    <div class="admin-grid">
+
+        <section class="panel">
+            <h2>Upload a document</h2>
+            <p>PDF, DOCX, TXT or CSV, up to 20 MB.</p>
+            <form class="stack-form" method="post" action="/admin/documents" enctype="multipart/form-data">
+                <label for="doc-file">Document file</label>
+                <input id="doc-file" type="file" name="file" accept=".pdf,.docx,.txt,.csv" required>
+
+                <label for="doc-category">Category</label>
+                <select id="doc-category" name="category">
+                    <option>General</option>
+                    <option>AcademicTimetable</option>
+                    <option>ExaminationNotice</option>
+                    <option>Syllabus</option>
+                    <option>AcademicCalendar</option>
+                    <option>SeatNumbers</option>
+                </select>
+
+                <div class="form-actions">
+                    <button class="btn btn-primary" type="submit">Upload and index</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="panel">
+            <h2>Add a department notice</h2>
+            <p>Published notices appear on the home page and in chat answers.</p>
+            <form class="stack-form" method="post" action="/admin/notices">
+                <label for="notice-title">Notice title</label>
+                <input id="notice-title" name="title" required maxlength="180">
+
+                <label for="notice-body">Notice details</label>
+                <textarea id="notice-body" name="body" rows="4" required maxlength="12000"></textarea>
+
+                <label for="notice-category">Category</label>
+                <input id="notice-category" name="category" value="General">
+
+                <label class="check-label">
+                    <input type="checkbox" name="published" checked> Publish immediately
+                </label>
+
+                <div class="form-actions">
+                    <button class="btn btn-primary" type="submit">Save notice</button>
+                </div>
+            </form>
+        </section>
+
+    </div>
+
+    <section class="panel">
+        <div class="section-title">
+            <h2>Department documents</h2>
+            <span>{{ docs|length }} total</span>
+        </div>
+
+        {% if docs %}
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>File name</th>
+                        <th>Category</th>
+                        <th>Status</th>
+                        <th>Uploaded</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in docs %}
+                    <tr>
+                        <td>{{ d.name }}</td>
+                        <td>{{ d.category }}</td>
+                        <td><span class="pill">{{ d.status }}</span></td>
+                        <td>{{ (d.created_at or '')[:10] }}</td>
+                        <td>
+                            <div class="actions">
+                                <a class="btn btn-sm" href="/admin/documents/{{ d.id }}/open" target="_blank">View</a>
+                                <form method="post" action="/admin/documents/{{ d.id }}/delete"
+                                      onsubmit="return confirm('Delete this document?')">
+                                    <button class="btn btn-sm btn-danger" type="submit">Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty">No documents uploaded yet. Upload the first department document above.</p>
+        {% endif %}
+    </section>
+
+    <section class="panel">
+        <div class="section-title">
+            <h2>Department notices</h2>
+            <span>{{ notices|length }} total</span>
+        </div>
+
+        {% if notices %}
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Visibility</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for n in notices %}
+                    <tr>
+                        <td>{{ n.title }}</td>
+                        <td>{{ n.category }}</td>
+                        <td><span class="pill {{ '' if n.published else 'draft' }}">{{ 'Published' if n.published else 'Draft' }}</span></td>
+                        <td>{{ (n.created_at or '')[:10] }}</td>
+                        <td>
+                            <div class="actions">
+                                <form method="post" action="/admin/notices/{{ n.id }}/delete"
+                                      onsubmit="return confirm('Delete this notice?')">
+                                    <button class="btn btn-sm btn-danger" type="submit">Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty">No notices created yet.</p>
+        {% endif %}
+    </section>
+
+</div>
+
+{% endblock %}
